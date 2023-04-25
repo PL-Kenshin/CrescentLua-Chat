@@ -12,10 +12,15 @@ GoogleSignin.configure();
 
 class GoogleAuthenticate extends Component {
 
+  constructor(props) {
+    super(props);
+   }
+
   state = {
     userInfo: null,
     isSigninInProgress: false,
   }
+
 
   signIn = async () => {
     this.setState({ isSigninInProgress: true })
@@ -25,6 +30,10 @@ class GoogleAuthenticate extends Component {
       const userInfo = await GoogleSignin.signIn();
       this.setState({ userInfo });
       this.setState({ isSigninInProgress: false })
+      this.props.navigation.navigate('ChatroomSelectionScreen',{
+        userData: this.state.userInfo,
+        fun: this.signOut
+      })
     } catch (error) {
       if (error.code === statusCodes.SIGN_IN_CANCELLED) {
         // user cancelled the login flow
@@ -139,7 +148,7 @@ const styles = StyleSheet.create({
     marginLeft: moderateScale(15, 0.3),
     marginRight: moderateScale(20, 0.3),
     fontSize: moderateScale(14, 0.3)
-  }
+  },
 })
 
 export default GoogleAuthenticate;
