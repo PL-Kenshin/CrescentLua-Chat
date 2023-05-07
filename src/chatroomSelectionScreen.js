@@ -1,8 +1,8 @@
 import React, { Component, useEffect } from 'react';
 import { View, StyleSheet, TouchableOpacity, Text, Image, SafeAreaView, FlatList } from 'react-native';
 import { scale, moderateScale, verticalScale } from './scalingUtils';
-//import { LogBox } from 'react-native';
-//LogBox.ignoreLogs([ 'Non-serializable values were found in the navigation state', ]);
+import { LogBox } from 'react-native';
+LogBox.ignoreLogs([ 'Non-serializable values were found in the navigation state', ]);
 //odkomentować w przypadku braku rozwiązania na warning
 
 const chatRooms = [
@@ -20,9 +20,12 @@ const chatRooms = [
     },
 ]
 
-const Item = ({ title }) => (
+const Item = ({ navigation, title, userInfo }) => (
     <View style={styles.item}>
-        <TouchableOpacity>
+        <TouchableOpacity  onPress={() => {navigation.navigate('chatScreen',{
+            userData: userInfo,
+        })
+        }}>
             <Text style={styles.title}>{title}</Text>
         </TouchableOpacity>
     </View>
@@ -58,7 +61,7 @@ const ChatRoomSelectionScreen = ({ navigation, route }) => {
         <SafeAreaView style={styles.container}>
             <FlatList
                 data={chatRooms}
-                renderItem={({ item }) => <Item title={item.title} />}
+                renderItem={({ item }) => <Item navigation={navigation} title={item.title} userInfo={route.params.userData} />}
                 keyExtractor={item => item.id}
             />
         </SafeAreaView>

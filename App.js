@@ -5,6 +5,7 @@ import ChatRoomSelectionScreen from './src/chatroomSelectionScreen';
 import GoogleAuthenticate from './src/GoogleAuthenticate';
 
 import SplashScreen from 'react-native-splash-screen'
+import ChatScreen from './src/chatScreen'
 
 const Stack = createNativeStackNavigator();
 
@@ -20,7 +21,7 @@ const App = () => {
       <Stack.Navigator>
         <Stack.Screen name="LogIn" component={GoogleAuthenticate} options={{headerShown: false}} />
         <Stack.Screen name="ChatroomSelectionScreen" component={ChatRoomSelectionScreen}/>
-        <Stack.Screen name="chatScreen" component={chatScreen}/>
+        <Stack.Screen name="chatScreen" component={ChatScreen}/>
       </Stack.Navigator>
     </NavigationContainer>
   );
