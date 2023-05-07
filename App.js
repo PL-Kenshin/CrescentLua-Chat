@@ -13,6 +13,7 @@ const App = () => {
       <Stack.Navigator>
         <Stack.Screen name="LogIn" component={GoogleAuthenticate} options={{headerShown: false}} />
         <Stack.Screen name="ChatroomSelectionScreen" component={ChatRoomSelectionScreen}/>
+        <Stack.Screen name="chatScreen" component={chatScreen}/>
       </Stack.Navigator>
     </NavigationContainer>
   );
