@@ -1,7 +1,7 @@
 import React, { Component, useEffect } from 'react';
 import { View, StyleSheet, TouchableOpacity, Text, Image, SafeAreaView, FlatList, TextInput } from 'react-native';
 import { scale, moderateScale, verticalScale } from './scalingUtils';
-import  Icon  from 'react-native-vector-icons/AntDesign';
+import  Icon  from 'react-native-vector-icons/FontAwesome';
 //import { LogBox } from 'react-native';
 //LogBox.ignoreLogs([ 'Non-serializable values were found in the navigation state', ]);
 //odkomentować w przypadku braku rozwiązania na warning
@@ -83,16 +83,20 @@ const ChatScreen = ({ navigation, route }) => {
 
     useEffect(() => {
         navigation.setOptions({
-            headerTitle: '',
+            headerTitle: route.params.title,
             headerLeft: () => (
-                <View>
-                    <Text style={styles.welcome}>Witaj {route.params.userData.user.name}</Text>
-                </View>
+                <TouchableOpacity onPress={() => {
+                    navigation.goBack()
+                }} hitSlop={{top:10,bottom:10,right:10,left:10}}>
+                    <Icon name="angle-left" size={30} color="white" />
+                </TouchableOpacity>
             ),
             headerBackVisible: false,
             headerStyle: {
-                backgroundColor: '#444444'
-            }
+                backgroundColor: '#444444',
+            },
+            headerTintColor:'white',
+            headerTitleAlign:'center'
         })
 
     })
@@ -114,14 +118,19 @@ const ChatScreen = ({ navigation, route }) => {
             <View style={styles.inputArea}>
                 <TextInput style={styles.input} ref={textInput} onChangeText={(value)=>setInputValue(value)}/>
                 <TouchableOpacity style={styles.send} onPress={() =>{
+                    if(inputValue==""){
+                        return
+                    }
+
                     const test = [...messagesList]
                     test.push({id:messagesList.length+1,userId:route.params.userData.user.id,userName:route.params.userData.user.name,date:new Date(),content:inputValue})
 
                     setMessagesList(test)
                     textInput.current.clear()
+                    setInputValue('')
                     }}>
 
-                    <Icon name="rightcircleo" size={38} color="#121212"/>
+                    <Icon name="chevron-circle-right" size={40} color="#777777"/>
                 </TouchableOpacity>
             </View>
 
@@ -158,12 +167,12 @@ const styles = StyleSheet.create({
     title: {
         padding: 10,
         fontSize: 16,
-        color:'#BBB'
+        color:'#BBBBBB'
     },
     title2: {
         padding: 10,
         fontSize: 16,
-        color:'#BBB'
+        color:'#BBBBBB'
     },
     logout: {
         color: 'red',
@@ -219,7 +228,6 @@ const styles = StyleSheet.create({
         marginRight: 12,
         alignItems:'center',
         justifyContent:'center',
-        backgroundColor: '#777',
         width: 40,
         height: 40,
         borderRadius: 100

@@ -7,6 +7,7 @@ import React, { Component } from 'react';
 import { View, StyleSheet, TouchableOpacity, Text, Image } from 'react-native';
 
 import { scale, moderateScale, verticalScale } from './scalingUtils';
+import DeviceInfo from 'react-native-device-info';
 
 GoogleSignin.configure();
 
@@ -19,20 +20,77 @@ class GoogleAuthenticate extends Component {
   state = {
     userInfo: null,
     isSigninInProgress: false,
+    isLoginScreenPresented:false
   }
 
+  async componentDidMount() {
+    await this.isSignedIn()
+    console.log("skipper:" + this.state.isLoginScreenPresented)
+    if(this.state.isLoginScreenPresented==false){
+      console.log('zalogowany')
+      const userInfo = await GoogleSignin.signInSilently();
+      this.setState({ userInfo });
+      this.setState({ isSigninInProgress: false })
+      this.props.navigation.reset({
+        index:0,
+        routes:[
+          {
+            name: 'ChatroomSelectionScreen',
+            params: {
+              userData: this.state.userInfo,
+              fun: this.signOut
+            }
+          }
+        ]
+      })
+    }
+  }
+
+  signInAnon = async () => {
+    const ID = await DeviceInfo.getUniqueId()
+    const userInfo = {
+        "user":{
+          "name":"anon#" + ID.toString().slice(-5),
+          "id":ID
+        }
+      }
+
+
+    this.setState({ userInfo: userInfo})
+    this.setState({ isSigninInProgress: false })
+    this.props.navigation.reset({
+      index:0,
+      routes:[
+        {
+          name: 'ChatroomSelectionScreen',
+          params: {
+            userData: this.state.userInfo,
+            fun: this.signOut
+          }
+        }
+      ]
+    })
+  }
 
   signIn = async () => {
     this.setState({ isSigninInProgress: true })
     try {
-
       await GoogleSignin.hasPlayServices();
       const userInfo = await GoogleSignin.signIn();
-      this.setState({ userInfo });
+      console.log(userInfo)
+      this.setState({ userInfo:userInfo });
       this.setState({ isSigninInProgress: false })
-      this.props.navigation.navigate('ChatroomSelectionScreen',{
-        userData: this.state.userInfo,
-        fun: this.signOut
+      this.props.navigation.reset({
+        index:0,
+        routes:[
+          {
+            name: 'ChatroomSelectionScreen',
+            params: {
+              userData: this.state.userInfo,
+              fun: this.signOut
+            }
+          }
+        ]
       })
     } catch (error) {
       if (error.code === statusCodes.SIGN_IN_CANCELLED) {
@@ -80,8 +138,10 @@ class GoogleAuthenticate extends Component {
   };
 
   render() {
+    console.log("render:" + this.state.isLoginScreenPresented)
     return (
-      <View style={{ display: 'flex', flex: 1, backgroundColor: '#121212', alignItems: 'center' }}>
+      <View style={styles.container}>
+      {this.state.isLoginScreenPresented? <View style={{ display: 'flex', flex: 1, backgroundColor: '#121212', alignItems: 'center' }}>
         <View style={{ flex: 1, justifyContent: 'flex-end' }}>
           <Image source={require('../src/images/logo.png')} style={styles.logo} />
         </View>
@@ -97,13 +157,14 @@ class GoogleAuthenticate extends Component {
             </Text>
           </TouchableOpacity>
 
-          <TouchableOpacity style={[styles.googleStyle, { backgroundColor: '#444444', borderColor: '#444444' }]}>
+          <TouchableOpacity style={[styles.googleStyle, { backgroundColor: '#444444', borderColor: '#444444' }]} onPress={this.signInAnon}>
             <Text style={[styles.textStyle, { marginLeft: moderateScale(20, 0.3), color: 'white' }]}>
               Zaloguj anonimowo
             </Text>
           </TouchableOpacity>
 
         </View>
+      </View>: <View style={{backgroundColor:'#121212'}}></View>}
       </View>
     )
   }

@@ -19,7 +19,7 @@ const App = () => {
   return (
     <NavigationContainer>
       <Stack.Navigator>
-        <Stack.Screen name="LogIn" component={GoogleAuthenticate} options={{headerShown: false}} />
+        <Stack.Screen name="LogIn" component={GoogleAuthenticate} options={{headerShown: false, unmountOnBlur:true}} />
         <Stack.Screen name="ChatroomSelectionScreen" component={ChatRoomSelectionScreen}/>
         <Stack.Screen name="chatScreen" component={ChatScreen}/>
       </Stack.Navigator>

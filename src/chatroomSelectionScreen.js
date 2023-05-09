@@ -1,67 +1,83 @@
-import React, { Component, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { View, StyleSheet, TouchableOpacity, Text, Image, SafeAreaView, FlatList } from 'react-native';
 import { scale, moderateScale, verticalScale } from './scalingUtils';
 import { LogBox } from 'react-native';
-LogBox.ignoreLogs([ 'Non-serializable values were found in the navigation state', ]);
+import usePreventCloseApp from './preventCloseApp';
+LogBox.ignoreLogs(['Non-serializable values were found in the navigation state',]);
 //odkomentować w przypadku braku rozwiązania na warning
 
 const chatRooms = [
     {
         id: '1',
-        title: 'Chatroom #1',
+        title: 'Chat #1',
     },
     {
         id: '2',
-        title: 'Chatroom #2',
+        title: 'Chat #2',
     },
     {
         id: '3',
-        title: 'Chatroom #3',
+        title: 'Chat #3',
     },
 ]
 
 const Item = ({ navigation, title, userInfo }) => (
     <View style={styles.item}>
-        <TouchableOpacity  onPress={() => {navigation.navigate('chatScreen',{
-            userData: userInfo,
-        })
+        <TouchableOpacity onPress={() => {
+            navigation.navigate('chatScreen', {
+                userData: userInfo,
+                title: title,
+            })
         }}>
-            <Text style={styles.title}>{title}</Text>
+            <View>
+                <Text style={styles.title} numberOfLines={1} ellipsizeMode="tail">{title}</Text>
+            </View>
         </TouchableOpacity>
     </View>
 )
 
 const ChatRoomSelectionScreen = ({ navigation, route }) => {
     useEffect(() => {
+        console.log(route.params.userData)
         navigation.setOptions({
             headerTitle: '',
             headerRight: () => (
                 <View>
                     <TouchableOpacity onPress={() => {
                         route.params.fun()
-                        navigation.navigate('LogIn')
+                        navigation.reset({
+                            index:0,
+                            routes:[
+                              {
+                                name: 'LogIn',
+                              }
+                            ]
+                          })
                     }}>
                         <Text style={styles.logout}>Wyloguj</Text>
                     </TouchableOpacity>
                 </View>
             ),
             headerLeft: () => (
+                
                 <View>
                     <Text style={styles.welcome}>Witaj {route.params.userData.user.name}</Text>
                 </View>
             ),
             headerBackVisible: false,
             headerStyle: {
-                backgroundColor: '#444444'
+                backgroundColor: '#444444',
             }
         })
     })
+
+    const { closeApp } = usePreventCloseApp();
 
     return (
         <SafeAreaView style={styles.container}>
             <FlatList
                 data={chatRooms}
-                renderItem={({ item }) => <Item navigation={navigation} title={item.title} userInfo={route.params.userData} />}
+                renderItem={({ item }) => <Item navigation={navigation} title={item.title} userInfo={route.params.userData} roomId={item.id} />}
                 keyExtractor={item => item.id}
             />
         </SafeAreaView>
@@ -73,19 +89,21 @@ const styles = StyleSheet.create({
         backgroundColor: '#121212',
         flex: 1,
         display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'flex-end'
     },
     item: {
+        display: 'flex',
+        flex: 1,
         backgroundColor: '#121212',
-        padding: 20,
-        marginVertical: 8,
-        marginHorizontal: 16,
+
         borderBottomWidth: 1,
         borderBottomColor: 'white',
     },
     title: {
-        fontSize: 32,
+        fontSize: moderateScale(32, 0.3),
+        color: '#AAAAAA',
+        padding: moderateScale(20, 0.3),
+        marginVertical: moderateScale(8, 0.3),
+        alignSelf:'center'
     },
     logout: {
         color: 'red',
