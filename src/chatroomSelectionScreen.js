@@ -21,12 +21,13 @@ const chatRooms = [
     },
 ]
 
-const Item = ({ navigation, title, userInfo }) => (
+const Item = ({ navigation, title, chatId, userInfo }) => (
     <View style={styles.item}>
         <TouchableOpacity onPress={() => {
             navigation.navigate('chatScreen', {
                 userData: userInfo,
                 title: title,
+                chatId:chatId
             })
         }}>
             <View>
@@ -77,7 +78,7 @@ const ChatRoomSelectionScreen = ({ navigation, route }) => {
         <SafeAreaView style={styles.container}>
             <FlatList
                 data={chatRooms}
-                renderItem={({ item }) => <Item navigation={navigation} title={item.title} userInfo={route.params.userData} roomId={item.id} />}
+                renderItem={({ item }) => <Item navigation={navigation} title={item.title} userInfo={route.params.userData} chatId={item.id} />}
                 keyExtractor={item => item.id}
             />
         </SafeAreaView>

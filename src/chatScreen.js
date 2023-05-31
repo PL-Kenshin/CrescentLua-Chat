@@ -14,73 +14,21 @@ const Item = ({ content, userId, userName, date, route }) => (
         <TouchableOpacity style={userId == route.params.userData.user.id ?
             styles.item : styles.item2}>
             <Text style={styles.title}>{content}</Text>
-
         </TouchableOpacity>
+        {console.log(typeof(date))}
         <Text style={userId == route.params.userData.user.id ? styles.dateSelf : styles.date}>{date.getHours()}:{date.getMinutes()<10?"0"+ date.getMinutes():date.getMinutes()}</Text>
     </View>
 )
 
 const ChatScreen = ({ navigation, route }) => {
+    const flatList = React.useRef(null)
+    const textInput = React.useRef(null)
+    const [inputValue,setInputValue] = React.useState('')
 
-    let messages = [
-        {
-            id: '1',
-            userId: '12312',
-            userName: 'anon1',
-            date: new Date(),
-            content: 'Lorem Ipsum',
-        },
-        {
-            id: '2',
-            userId: '12321',
-            userName: 'anon2',
-            date: new Date(),
-            content: 'Lorem Ipsum Lorem Ipsum Lorem Ipsum Lorem Ipsum Lorem Ipsum Lorem Ipsum',
-        },
-        {
-            id: '3',
-            userId: route.params.userData.user.id,
-            userName: route.params.userData.user.name,
-            date: new Date(),
-            content: 'Lorem Ipsum',
-        },
-        {
-            id: '4',
-            userId: '12312',
-            userName: 'anon1',
-            date: new Date(),
-            content: 'Lorem Ipsum',
-        },
-        {
-            id: '5',
-            userId: '12312',
-            userName: 'anon1',
-            date: new Date(),
-            content: 'Lorem Ipsum',
-        },
-        {
-            id: '6',
-            userId: '12312',
-            userName: 'anon1',
-            date: new Date(),
-            content: 'Lorem Ipsum',
-        },
-        {
-            id: '7',
-            userId: '12312',
-            userName: 'anon1',
-            date: new Date(),
-            content: 'Lorem Ipsum',
-        },
-        {
-            id: '8',
-            userId: '12312',
-            userName: 'anon1',
-            date: new Date(),
-            content: 'Lorem Ipsum',
-        },
-    ]
+    const [messagesList, setMessagesList] = React.useState(null)
 
+    const socket = route.params.socket
+    
     useEffect(() => {
         navigation.setOptions({
             headerTitle: route.params.title,
@@ -98,21 +46,34 @@ const ChatScreen = ({ navigation, route }) => {
             headerTintColor:'white',
             headerTitleAlign:'center'
         })
+        const fetchMessages = async () => {
+            try {
+                socket.emit("getMessages",route.params.chatId, (response) => {
+                    setMessagesList(response.messages)
+                });
+            } catch (e) {
+                console.error('Error fetching data:', e)
+            }
+        }
+        fetchMessages()
+    },[])
 
-    })
-    const flatList = React.useRef(null)
-    const textInput = React.useRef(null)
-    const [inputValue,setInputValue] = React.useState('')
-
-    const [messagesList, setMessagesList] = React.useState(messages)
     return (
         <SafeAreaView style={styles.container}>
-            <FlatList
+            {messagesList ? <View><FlatList
                 ref={flatList}
-                onContentSizeChange={() => flatList.current.scrollToEnd()}
-                onLayout={() => flatList.current.scrollToEnd()}
+                onContentSizeChange={() => {
+                    if(messagesList.length != 0){
+                        flatList.current.scrollToEnd()
+                    }
+                }}
+                onLayout={() => {
+                    if(messagesList.length != 0){
+                        flatList.current.scrollToEnd()
+                    }
+                }}
                 data={messagesList}
-                renderItem={({ item }) => <Item content={item.content} userId={item.userId} date={item.date} route={route} userName={item.userName} />}
+                renderItem={({ item }) => <Item content={item.content} userId={item.userId} date={new Date(item.date)} route={route} userName={item.userName} />}
                 keyExtractor={item => item.id}
             />
             <View style={styles.inputArea}>
@@ -120,6 +81,17 @@ const ChatScreen = ({ navigation, route }) => {
                 <TouchableOpacity style={styles.send} onPress={() =>{
                     if(inputValue==""){
                         return
+                    }
+                    try {
+                        socket.emit("message",route.params.chatId,{
+                            id:messagesList.length+1,
+                            userId:route.params.userData.user.id,
+                            userName:route.params.userData.user.name,
+                            date:new Date(),
+                            content:inputValue
+                        })
+                    } catch (e) {
+                        console.error("Sending error", e)
                     }
 
                     const test = [...messagesList]
@@ -132,7 +104,7 @@ const ChatScreen = ({ navigation, route }) => {
 
                     <Icon name="chevron-circle-right" size={40} color="#777777"/>
                 </TouchableOpacity>
-            </View>
+            </View></View>:<View><Text>Loading...</Text></View>}
 
         </SafeAreaView>
     )
