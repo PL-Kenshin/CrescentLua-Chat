@@ -62,7 +62,7 @@ const ChatScreen = ({ navigation, route }) => {
             console.log(messagesList)
             let updated = [...messagesList]
             
-            updated.push({id:message.id,userId:message.userId,userName:message.userName,date:new Date(message.date),content:message.content})
+            updated.push({userId:message.userId,userName:message.userName,date:new Date(message.date),content:message.content})
 
             setMessagesList(updated)
             } catch (e) {
@@ -100,7 +100,7 @@ const ChatScreen = ({ navigation, route }) => {
                 }}
                 data={messagesList}
                 renderItem={({ item }) => <Item content={item.content} userId={item.userId} date={new Date(item.date)} route={route} userName={item.userName} />}
-                keyExtractor={item => item.id}
+                keyExtractor={item => item.date}
             />
             <View style={styles.inputArea}>
                 <TextInput style={styles.input} ref={textInput} onChangeText={(value)=>setInputValue(value)}/>
@@ -110,7 +110,6 @@ const ChatScreen = ({ navigation, route }) => {
                     }
                     try {
                         socket.emit("message",route.params.chatId,{
-                            id:messagesList.length+1,
                             userId:route.params.userData.user.id,
                             userName:route.params.userData.user.name,
                             date:new Date(),
@@ -121,7 +120,7 @@ const ChatScreen = ({ navigation, route }) => {
                     }
 
                     const test = [...messagesList]
-                    test.push({id:messagesList.length+1,userId:route.params.userData.user.id,userName:route.params.userData.user.name,date:new Date(),content:inputValue})
+                    test.push({userId:route.params.userData.user.id,userName:route.params.userData.user.name,date:new Date(),content:inputValue})
 
                     setMessagesList(test)
                     textInput.current.clear()
