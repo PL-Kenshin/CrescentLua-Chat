@@ -112,7 +112,6 @@ const ChatScreen = ({ navigation, route }) => {
                         socket.emit("message",route.params.chatId,{
                             userId:route.params.userData.user.id,
                             userName:route.params.userData.user.name,
-                            date:new Date(),
                             content:inputValue
                         })
                     } catch (e) {
