@@ -47,6 +47,10 @@ const ChatScreen = ({ navigation, route }) => {
         const fetchMessages = async () => {
             try {
                 socket.emit("getMessages",route.params.chatId, (response) => {
+                    console.log(response.messages)
+                    response.messages.forEach(element => {
+                        element.date = new Date(element.date)
+                    });
                     setMessagesList(response.messages)
                 });
             } catch (e) {
@@ -58,11 +62,10 @@ const ChatScreen = ({ navigation, route }) => {
     useEffect(() => {
         const messageListener = async (message) => {
             try{
-            console.log(message)
-            console.log(messagesList)
             let updated = [...messagesList]
             
-            updated.push({userId:message.userId,userName:message.userName,date:message.date,content:message.content})
+            updated.push({id:messagesList+1,userId:message.userId,userName:message.userName,date:message.date,content:message.content})
+            console.log(message.date)
             setMessagesList(updated)
             } catch (e) {
                 console.log(e)
@@ -98,8 +101,8 @@ const ChatScreen = ({ navigation, route }) => {
                     }
                 }}
                 data={messagesList}
-                renderItem={({ item }) => <Item content={item.content} userId={item.userId} date={new Date(item.date)} route={route} userName={item.userName} />}
-                keyExtractor={item => item.date}
+                renderItem={({ item }) => <Item content={item.content} userId={item.userId} date={item.date} route={route} userName={item.userName} />}
+                keyExtractor={item => item.id}
             />
             <View style={styles.inputArea}>
                 <TextInput style={styles.input} ref={textInput} onChangeText={(value)=>setInputValue(value)}/>
@@ -118,7 +121,7 @@ const ChatScreen = ({ navigation, route }) => {
                     }
                     //just to commit
                     const test = [...messagesList]
-                    test.push({userId:route.params.userData.user.id,userName:route.params.userData.user.name,date:new Date(),content:inputValue})
+                    test.push({id:messagesList+1,userId:route.params.userData.user.id,userName:route.params.userData.user.name,date:new Date(),content:inputValue})
 
                     setMessagesList(test)
                     textInput.current.clear()
