@@ -15,8 +15,6 @@ const Item = ({ content, userId, userName, date, route }) => (
             styles.item : styles.item2}>
             <Text style={styles.title}>{content}</Text>
         </TouchableOpacity>
-        {console.log("teraz tu",typeof(date))}
-        {console.log(date)}
         <Text style={userId == route.params.userData.user.id ? styles.dateSelf : styles.date}>{date.getHours()}:{date.getMinutes()<10?"0"+ date.getMinutes():date.getMinutes()}</Text>
     </View>
 )
@@ -107,6 +105,7 @@ const ChatScreen = ({ navigation, route }) => {
             <View style={styles.inputArea}>
                 <TextInput style={styles.input} ref={textInput} onChangeText={(value)=>setInputValue(value)}/>
                 <TouchableOpacity style={styles.send} onPress={() =>{
+                    let date = null
                     if(inputValue==""){
                         return
                     }
@@ -115,13 +114,17 @@ const ChatScreen = ({ navigation, route }) => {
                             userId:route.params.userData.user.id,
                             userName:route.params.userData.user.name,
                             content:inputValue
+                        },(response) => {
+                            date = response.date
+                            console.log(response.date)
+                            console.log(new Date(response.date))
                         })
                     } catch (e) {
                         console.error("Sending error", e)
                     }
-                    //just to commit
+
                     const test = [...messagesList]
-                    test.push({id:messagesList+1,userId:route.params.userData.user.id,userName:route.params.userData.user.name,date:new Date(),content:inputValue})
+                    test.push({id:messagesList+1,userId:route.params.userData.user.id,userName:route.params.userData.user.name,date:new Date(date),content:inputValue})
 
                     setMessagesList(test)
                     textInput.current.clear()
