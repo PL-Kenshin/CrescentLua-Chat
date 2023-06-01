@@ -62,8 +62,7 @@ const ChatScreen = ({ navigation, route }) => {
             console.log(messagesList)
             let updated = [...messagesList]
             
-            updated.push({userId:message.userId,userName:message.userName,date:new Date(message.date),content:message.content})
-
+            updated.push({userId:message.userId,userName:message.userName,date:message.date,content:message.content})
             setMessagesList(updated)
             } catch (e) {
                 console.log(e)
