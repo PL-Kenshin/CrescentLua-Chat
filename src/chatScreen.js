@@ -55,7 +55,8 @@ const ChatScreen = ({ navigation, route }) => {
             }
         }
         fetchMessages()
-
+    },[])
+    useEffect(() => {
         const messageListener = async (message) => {
             try{
             console.log(message)
@@ -82,7 +83,7 @@ const ChatScreen = ({ navigation, route }) => {
             }
 
         }
-    },[])
+    },[messagesList])
 
     return (
         <SafeAreaView style={styles.container}>
