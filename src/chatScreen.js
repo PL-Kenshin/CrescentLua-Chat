@@ -49,12 +49,10 @@ const ChatScreen = ({ navigation, route }) => {
         const fetchMessages = async () => {
             try {
                 socket.emit("getMessages",route.params.chatId, (response) => {
-                    console.log(response.messages)
                     let messages = [...response.messages]
                     messages.forEach(element => {
                         element.date = new Date(element.date)
                     });
-                    console.log(typeof(messages[0].date))
                     setMessagesList(messages)
                 });
             } catch (e) {
@@ -67,9 +65,7 @@ const ChatScreen = ({ navigation, route }) => {
         const messageListener = async (message) => {
             try{
             let updated = [...messagesList]
-            console.log('tym jestem',typeof(message.date))
             updated.push({id:messagesList+1,userId:message.userId,userName:message.userName,date:new Date(message.date),content:message.content})
-            console.log(message.date)
             setMessagesList(updated)
             } catch (e) {
                 console.log(e)
