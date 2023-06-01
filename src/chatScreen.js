@@ -27,7 +27,6 @@ const ChatScreen = ({ navigation, route }) => {
     const [messagesList, setMessagesList] = React.useState(null)
 
     const socket = route.params.socket
-    
     useEffect(() => {
         navigation.setOptions({
             headerTitle: route.params.title,
@@ -119,7 +118,7 @@ const ChatScreen = ({ navigation, route }) => {
                     } catch (e) {
                         console.error("Sending error", e)
                     }
-
+                    //just to commit
                     const test = [...messagesList]
                     test.push({userId:route.params.userData.user.id,userName:route.params.userData.user.name,date:new Date(),content:inputValue})
 
