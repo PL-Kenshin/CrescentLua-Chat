@@ -15,6 +15,8 @@ const Item = ({ content, userId, userName, date, route }) => (
             styles.item : styles.item2}>
             <Text style={styles.title}>{content}</Text>
         </TouchableOpacity>
+        {console.log("teraz tu",typeof(date))}
+        {console.log(date)}
         <Text style={userId == route.params.userData.user.id ? styles.dateSelf : styles.date}>{date.getHours()}:{date.getMinutes()<10?"0"+ date.getMinutes():date.getMinutes()}</Text>
     </View>
 )
@@ -48,10 +50,12 @@ const ChatScreen = ({ navigation, route }) => {
             try {
                 socket.emit("getMessages",route.params.chatId, (response) => {
                     console.log(response.messages)
-                    response.messages.forEach(element => {
+                    let messages = [...response.messages]
+                    messages.forEach(element => {
                         element.date = new Date(element.date)
                     });
-                    setMessagesList(response.messages)
+                    console.log(typeof(messages[0].date))
+                    setMessagesList(messages)
                 });
             } catch (e) {
                 console.error('Error fetching data:', e)
@@ -63,8 +67,8 @@ const ChatScreen = ({ navigation, route }) => {
         const messageListener = async (message) => {
             try{
             let updated = [...messagesList]
-            
-            updated.push({id:messagesList+1,userId:message.userId,userName:message.userName,date:message.date,content:message.content})
+            console.log('tym jestem',typeof(message.date))
+            updated.push({id:messagesList+1,userId:message.userId,userName:message.userName,date:new Date(message.date),content:message.content})
             console.log(message.date)
             setMessagesList(updated)
             } catch (e) {
