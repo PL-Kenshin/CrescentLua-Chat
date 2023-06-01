@@ -85,8 +85,8 @@ const ChatScreen = ({ navigation, route }) => {
     },[messagesList])
 
     return (
-        <SafeAreaView style={styles.container}>
-            {messagesList ? <View><FlatList
+        <SafeAreaView  style={{flex:1}}>
+            {messagesList ? <View style={styles.container}><FlatList
                 ref={flatList}
                 onContentSizeChange={() => {
                     if(messagesList.length != 0){
@@ -104,31 +104,31 @@ const ChatScreen = ({ navigation, route }) => {
             />
             <View style={styles.inputArea}>
                 <TextInput style={styles.input} ref={textInput} onChangeText={(value)=>setInputValue(value)}/>
-                <TouchableOpacity style={styles.send} onPress={() =>{
+                <TouchableOpacity style={styles.send} onPress={async() =>{
                     let date = null
                     if(inputValue==""){
                         return
                     }
+                    content = inputValue
+                    textInput.current.clear()
+                    setInputValue('')
                     try {
-                        socket.emit("message",route.params.chatId,{
+                        await new Promise(resolve => socket.emit("message",route.params.chatId,{
                             userId:route.params.userData.user.id,
                             userName:route.params.userData.user.name,
-                            content:inputValue
-                        },(response) => {
-                            date = response.date
-                            console.log(response.date)
-                            console.log(new Date(response.date))
-                        })
+                            content:content
+                        }, (response) => {
+                            resolve(date = new Date(response.date))
+                        }))
                     } catch (e) {
                         console.error("Sending error", e)
                     }
 
                     const test = [...messagesList]
-                    test.push({id:messagesList+1,userId:route.params.userData.user.id,userName:route.params.userData.user.name,date:new Date(date),content:inputValue})
+                    test.push({id:messagesList+1,userId:route.params.userData.user.id,userName:route.params.userData.user.name,date:date,content:inputValue})
 
                     setMessagesList(test)
-                    textInput.current.clear()
-                    setInputValue('')
+
                     }}>
 
                     <Icon name="chevron-circle-right" size={40} color="#777777"/>
@@ -144,8 +144,7 @@ const styles = StyleSheet.create({
         backgroundColor: '#121212',
         flex: 1,
         display: 'flex',
-
-        justifyContent: 'flex-end'
+        justifyContent:'flex-end'
     },
     item: {
         display: 'flex',
@@ -214,7 +213,7 @@ const styles = StyleSheet.create({
     },
     inputArea:{
         display:'flex',
-        flexDirection:'row'
+        flexDirection:'row',
     },
     input: {
         height: 40,
