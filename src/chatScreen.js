@@ -15,7 +15,6 @@ const Item = ({ content, userId, userName, date, route }) => (
             styles.item : styles.item2}>
             <Text style={styles.title}>{content}</Text>
         </TouchableOpacity>
-        {console.log(typeof(date))}
         <Text style={userId == route.params.userData.user.id ? styles.dateSelf : styles.date}>{date.getHours()}:{date.getMinutes()<10?"0"+ date.getMinutes():date.getMinutes()}</Text>
     </View>
 )
@@ -56,6 +55,33 @@ const ChatScreen = ({ navigation, route }) => {
             }
         }
         fetchMessages()
+
+        const messageListener = async (message) => {
+            try{
+            console.log(message)
+            console.log(messagesList)
+            let updated = [...messagesList]
+            
+            updated.push({id:message.id,userId:message.userId,userName:message.userName,date:new Date(message.date),content:message.content})
+
+            setMessagesList(updated)
+            } catch (e) {
+                console.log(e)
+            }
+        }
+        try{
+            socket.on("newMessage", messageListener)
+        } catch (e) {
+            console.log("error on listening", e)
+        }
+        return () => {
+            try{
+                socket.off("newMessage", messageListener)
+            } catch (e) {
+                console.log("error on closing listener", e)
+            }
+
+        }
     },[])
 
     return (

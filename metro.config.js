@@ -14,4 +14,7 @@ module.exports = {
       },
     }),
   },
+  resolver: {
+    blacklistRE: /Warning: Non-serializable values were found in the navigation state/,
+  },
 };
