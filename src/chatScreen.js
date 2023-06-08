@@ -1,28 +1,52 @@
 import React, { Component, useEffect } from 'react';
-import { View, StyleSheet, TouchableOpacity, Text, Image, SafeAreaView, FlatList, TextInput } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, Text, Image, SafeAreaView, FlatList, TextInput, Alert } from 'react-native';
 import { scale, moderateScale, verticalScale } from './scalingUtils';
-import  Icon  from 'react-native-vector-icons/FontAwesome';
+import Icon from 'react-native-vector-icons/FontAwesome';
+
 //import { LogBox } from 'react-native';
 //LogBox.ignoreLogs([ 'Non-serializable values were found in the navigation state', ]);
 //odkomentować w przypadku braku rozwiązania na warning
 
 
 
-const Item = ({ content, userId, userName, date, route }) => (
+const Item = ({ list, fun, socket, chatId, id, content, userId, userName, date, route }) => (
     <View >
         <Text style={userId == route.params.userData.user.id ? styles.nameSelf : styles.name}>{userName}</Text>
-        <TouchableOpacity style={userId == route.params.userData.user.id ?
-            styles.item : styles.item2}>
+        <TouchableOpacity style={userId == route.params.userData.user.id ? styles.item : styles.item2}
+            onLongPress={() => {
+                if(userId == route.params.userData.user.id) {
+                    Alert.alert('Confirm', 'Are you sure you want to delete message?', [
+                        {
+                            text: "Yes",
+                            onPress: () => {
+                                socket.emit('messageDelete', chatId, id)
+                                let items = [...list]
+                                let index = items.findIndex((element) => element.id == id)
+                                items.splice(index, 1)
+                                for (let i = index; i < items.length; i++) {
+                                    items[i].id = items[i].id - 1
+                                }
+                                fun(items)
+                            }
+                        }, {
+                            text: "No",
+                            onPress: () => console.log('No')
+                        }
+                    ]
+                    )
+                }
+            }
+            }>
             <Text style={styles.title}>{content}</Text>
         </TouchableOpacity>
-        <Text style={userId == route.params.userData.user.id ? styles.dateSelf : styles.date}>{date.getHours()}:{date.getMinutes()<10?"0"+ date.getMinutes():date.getMinutes()}</Text>
+        <Text style={userId == route.params.userData.user.id ? styles.dateSelf : styles.date}>{date.getHours()}:{date.getMinutes() < 10 ? "0" + date.getMinutes() : date.getMinutes()}</Text>
     </View>
 )
 
 const ChatScreen = ({ navigation, route }) => {
     const flatList = React.useRef(null)
     const textInput = React.useRef(null)
-    const [inputValue,setInputValue] = React.useState('')
+    const [inputValue, setInputValue] = React.useState('')
 
     const [messagesList, setMessagesList] = React.useState(null)
 
@@ -33,7 +57,7 @@ const ChatScreen = ({ navigation, route }) => {
             headerLeft: () => (
                 <TouchableOpacity onPress={() => {
                     navigation.goBack()
-                }} hitSlop={{top:10,bottom:10,right:10,left:10}}>
+                }} hitSlop={{ top: 10, bottom: 10, right: 10, left: 10 }}>
                     <Icon name="angle-left" size={30} color="white" />
                 </TouchableOpacity>
             ),
@@ -41,12 +65,12 @@ const ChatScreen = ({ navigation, route }) => {
             headerStyle: {
                 backgroundColor: '#444444',
             },
-            headerTintColor:'white',
-            headerTitleAlign:'center'
+            headerTintColor: 'white',
+            headerTitleAlign: 'center'
         })
         const fetchMessages = async () => {
             try {
-                socket.emit("getMessages",route.params.chatId, (response) => {
+                socket.emit("getMessages", route.params.chatId, (response) => {
                     let messages = [...response.messages]
                     messages.forEach(element => {
                         element.date = new Date(element.date)
@@ -58,82 +82,87 @@ const ChatScreen = ({ navigation, route }) => {
             }
         }
         fetchMessages()
-    },[])
+    }, [])
     useEffect(() => {
         const messageListener = async (message) => {
-            try{
-            let updated = [...messagesList]
-            updated.push({id:messagesList+1,userId:message.userId,userName:message.userName,date:new Date(message.date),content:message.content})
-            setMessagesList(updated)
+            try {
+                let updated = [...messagesList]
+                updated.push({ id: messagesList + 1, userId: message.userId, userName: message.userName, date: new Date(message.date), content: message.content })
+                setMessagesList(updated)
             } catch (e) {
                 console.log(e)
             }
         }
-        try{
-            socket.on("newMessage", messageListener)
+        try {
+            socket.once("newMessage", messageListener)
         } catch (e) {
             console.log("error on listening", e)
         }
-        return () => {
-            try{
-                socket.off("newMessage", messageListener)
-            } catch (e) {
-                console.log("error on closing listener", e)
-            }
-
+        try {
+            socket.once("deleteMessage", (id) =>{
+                let items = [...messagesList]
+                let index = items.findIndex((element) => element.id == id)
+                items.splice(index, 1)
+                for (let i = index; i < items.length; i++) {
+                    items[i].id = items[i].id - 1
+                }
+                setMessagesList(items)
+            })
+        } catch (e) {
+            
         }
-    },[messagesList])
+    }, [messagesList])
 
     return (
-        <SafeAreaView  style={{flex:1}}>
+        <SafeAreaView style={{ flex: 1 }}>
             {messagesList ? <View style={styles.container}><FlatList
                 ref={flatList}
                 onContentSizeChange={() => {
-                    if(messagesList.length != 0){
+                    if (messagesList.length != 0) {
                         flatList.current.scrollToEnd()
                     }
                 }}
                 onLayout={() => {
-                    if(messagesList.length != 0){
+                    if (messagesList.length != 0) {
                         flatList.current.scrollToEnd()
                     }
                 }}
                 data={messagesList}
-                renderItem={({ item }) => <Item content={item.content} userId={item.userId} date={item.date} route={route} userName={item.userName} />}
+                renderItem={({ item }) => <Item list={messagesList} fun={setMessagesList} socket={socket} chatId={route.params.chatId} id={item.id} content={item.content} userId={item.userId} date={item.date} route={route} userName={item.userName} />}
                 keyExtractor={item => item.id}
             />
-            <View style={styles.inputArea}>
-                <TextInput style={styles.input} ref={textInput} onChangeText={(value)=>setInputValue(value)}/>
-                <TouchableOpacity style={styles.send} onPress={async() =>{
-                    let date = null
-                    if(inputValue==""){
-                        return
-                    }
-                    content = inputValue
-                    textInput.current.clear()
-                    setInputValue('')
-                    try {
-                        await new Promise(resolve => socket.emit("message",route.params.chatId,{
-                            userId:route.params.userData.user.id,
-                            userName:route.params.userData.user.name,
-                            content:content
-                        }, (response) => {
-                            resolve(date = new Date(response.date))
-                        }))
-                    } catch (e) {
-                        console.error("Sending error", e)
-                    }
+                <View style={styles.inputArea}>
+                    <TextInput style={styles.input} ref={textInput} onChangeText={(value) => setInputValue(value)} />
+                    <TouchableOpacity style={styles.send} onPress={async () => {
+                        let date = null
+                        if (inputValue == "") {
+                            return
+                        }
+                        content = inputValue
+                        textInput.current.clear()
+                        setInputValue('')
+                        try {
+                            await new Promise(resolve => socket.emit("message", route.params.chatId, {
+                                userId: route.params.userData.user.id,
+                                userName: route.params.userData.user.name,
+                                content: content
+                            }, (response) => {
+                                resolve(date = new Date(response.date))
+                            }))
+                        } catch (e) {
+                            console.error("Sending error", e)
+                        }
 
-                    const test = [...messagesList]
-                    test.push({id:messagesList+1,userId:route.params.userData.user.id,userName:route.params.userData.user.name,date:date,content:inputValue})
+                        const test = [...messagesList]
+                        test.push({ id: test[test.length-1].id+1, userId: route.params.userData.user.id, userName: route.params.userData.user.name, date: date, content: inputValue })
 
-                    setMessagesList(test)
+                        setMessagesList(test)
 
                     }}>
 
-                    <Icon name="chevron-circle-right" size={40} color="#777777"/>
-                </TouchableOpacity>
-            </View></View>:<View><Text>Loading...</Text></View>}
+                        <Icon name="chevron-circle-right" size={40} color="#777777" />
+                    </TouchableOpacity>
+                </View></View> : <View><Text>Loading...</Text></View>}
 
         </SafeAreaView>
     )
@@ -144,7 +173,7 @@ const styles = StyleSheet.create({
         backgroundColor: '#121212',
         flex: 1,
         display: 'flex',
-        justifyContent:'flex-end'
+        justifyContent: 'flex-end'
     },
     item: {
         display: 'flex',
@@ -167,12 +196,12 @@ const styles = StyleSheet.create({
     title: {
         padding: 10,
         fontSize: 16,
-        color:'#BBBBBB'
+        color: '#BBBBBB'
     },
     title2: {
         padding: 10,
         fontSize: 16,
-        color:'#BBBBBB'
+        color: '#BBBBBB'
     },
     logout: {
         color: 'red',
@@ -211,23 +240,23 @@ const styles = StyleSheet.create({
         marginTop: 10,
         marginBottom: -7
     },
-    inputArea:{
-        display:'flex',
-        flexDirection:'row',
+    inputArea: {
+        display: 'flex',
+        flexDirection: 'row',
     },
     input: {
         height: 40,
         margin: 12,
-        width:300,
+        width: 300,
         borderWidth: 1,
         padding: 10,
         borderColor: '#444444'
     },
     send: {
-        marginVertical:12,
+        marginVertical: 12,
         marginRight: 12,
-        alignItems:'center',
-        justifyContent:'center',
+        alignItems: 'center',
+        justifyContent: 'center',
         width: 40,
         height: 40,
         borderRadius: 100
