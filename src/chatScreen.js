@@ -87,29 +87,43 @@ const ChatScreen = ({ navigation, route }) => {
         const messageListener = async (message) => {
             try {
                 let updated = [...messagesList]
-                updated.push({ id: messagesList + 1, userId: message.userId, userName: message.userName, date: new Date(message.date), content: message.content })
+                updated.push({ id: updated[updated.length-1].id+1, userId: message.userId, userName: message.userName, date: new Date(message.date), content: message.content })
                 setMessagesList(updated)
             } catch (e) {
-                console.log(e)
+                console.log('messageListener Error: ',e)
             }
         }
+
         try {
-            socket.once("newMessage", messageListener)
+            socket.on("newMessage", messageListener)
         } catch (e) {
             console.log("error on listening", e)
         }
+
+        const deleteListener = async (id) =>{
+            let items = [...messagesList]
+            let index = items.findIndex((element) => element.id == id)
+            console.log(index)
+            items.splice(index, 1)
+            for (let i = index; i < items.length; i++) {
+                items[i].id = items[i].id - 1
+            }
+            setMessagesList(items)
+        }
         try {
-            socket.once("deleteMessage", (id) =>{
-                let items = [...messagesList]
-                let index = items.findIndex((element) => element.id == id)
-                items.splice(index, 1)
-                for (let i = index; i < items.length; i++) {
-                    items[i].id = items[i].id - 1
-                }
-                setMessagesList(items)
-            })
+            socket.on("deleteMessage", deleteListener)
         } catch (e) {
-            
+            console.log(e)
+        }
+
+        return () => {
+            try {
+                socket.off("newMessage", messageListener)
+                socket.off("deleteMessage", deleteListener)
+            } catch (e) {
+                console.log("error on closing listeners", e)
+            }
+
         }
     }, [messagesList])
 
