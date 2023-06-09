@@ -9,8 +9,8 @@ import Icon from 'react-native-vector-icons/FontAwesome';
 
 
 
-const Item = ({ list, fun, socket, chatId, id, content, userId, userName, date, route }) => (
-    <View >
+const Item = ({ list, fun, socket, chatId, _id, content, userId, userName, date, route }) => (
+    <View >{console.log(_id)}
         <Text style={userId == route.params.userData.user.id ? styles.nameSelf : styles.name}>{userName}</Text>
         <TouchableOpacity style={userId == route.params.userData.user.id ? styles.item : styles.item2}
             onLongPress={() => {
@@ -19,13 +19,11 @@ const Item = ({ list, fun, socket, chatId, id, content, userId, userName, date, 
                         {
                             text: "Yes",
                             onPress: () => {
-                                socket.emit('messageDelete', chatId, id)
+                                socket.emit('messageDelete', chatId, _id)
                                 let items = [...list]
-                                let index = items.findIndex((element) => element.id == id)
+                                let index = items.findIndex((element) => element._id == _id)
                                 items.splice(index, 1)
-                                for (let i = index; i < items.length; i++) {
-                                    items[i].id = items[i].id - 1
-                                }
+
                                 fun(items)
                             }
                         }, {
@@ -89,7 +87,7 @@ const ChatScreen = ({ navigation, route }) => {
         const messageListener = async (message) => {
             try {
                 let updated = [...messagesList]
-                updated.push({ id: message.id, userId: message.userId, userName: message.userName, date: new Date(message.date), content: message.content })
+                updated.push({ _id: message._id, userId: message.userId, userName: message.userName, date: new Date(message.date), content: message.content })
                 setMessagesList(updated)
             } catch (e) {
                 console.log('messageListener Error: ',e)
@@ -102,14 +100,11 @@ const ChatScreen = ({ navigation, route }) => {
             console.log("error on listening", e)
         }
 
-        const deleteListener = async (id) =>{
+        const deleteListener = async (_id) =>{
             let items = [...messagesList]
-            let index = items.findIndex((element) => element.id == id)
+            let index = items.findIndex((element) => element._id == _id)
             console.log(index)
             items.splice(index, 1)
-            for (let i = index; i < items.length; i++) {
-                items[i].id = items[i].id - 1
-            }
             setMessagesList(items)
         }
         try {
@@ -147,7 +142,7 @@ const ChatScreen = ({ navigation, route }) => {
                     }
                 }}
                 data={messagesList}
-                renderItem={({ item }) => <Item list={messagesList} fun={setMessagesList} socket={socket} chatId={route.params.chatId} id={item._id} content={item.content} userId={item.userId} date={item.date} route={route} userName={item.userName} />}
+                renderItem={({ item }) => <Item list={messagesList} fun={setMessagesList} socket={socket} chatId={route.params.chatId} _id={item._id} content={item.content} userId={item.userId} date={item.date} route={route} userName={item.userName} />}
                 keyExtractor={item => item._id}
                 onRefresh={async () => {
                     setIsRefreshing(true)
@@ -184,14 +179,14 @@ const ChatScreen = ({ navigation, route }) => {
                         content = inputValue
                         textInput.current.clear()
                         setInputValue('')
-                        let id = null
+                        let _id = null
                         try {
                             await new Promise(resolve => socket.emit("message", route.params.chatId, {
                                 userId: route.params.userData.user.id,
                                 userName: route.params.userData.user.name,
                                 content: content
                             }, (response) => {
-                                id = response.id
+                                _id = response._id
                                 resolve(date = new Date(response.date))
                             }))
                         } catch (e) {
@@ -199,7 +194,7 @@ const ChatScreen = ({ navigation, route }) => {
                         }
 
                         const test = [...messagesList]
-                        test.push({ id: id, userId: route.params.userData.user.id, userName: route.params.userData.user.name, date: date, content: inputValue })
+                        test.push({ _id: _id, userId: route.params.userData.user.id, userName: route.params.userData.user.name, date: date, content: inputValue })
 
                         setMessagesList(test)
 
