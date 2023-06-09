@@ -10,7 +10,7 @@ import Icon from 'react-native-vector-icons/FontAwesome';
 
 
 const Item = ({ list, fun, socket, chatId, _id, content, userId, userName, date, route }) => (
-    <View >{console.log(_id)}
+    <View >
         <Text style={userId == route.params.userData.user.id ? styles.nameSelf : styles.name}>{userName}</Text>
         <TouchableOpacity style={userId == route.params.userData.user.id ? styles.item : styles.item2}
             onLongPress={() => {
@@ -37,7 +37,7 @@ const Item = ({ list, fun, socket, chatId, _id, content, userId, userName, date,
             > 
                 <Text style={styles.title}>{content}</Text> 
             </TouchableOpacity>
-        <Text style={userId == route.params.userData.user.id ? styles.dateSelf : styles.date}>{date.getHours()}:{date.getMinutes() < 10 ? "0" + date.getMinutes() : date.getMinutes()}</Text>
+        <Text style={userId == route.params.userData.user.id ? styles.dateSelf : styles.date}>{date.toLocaleString("en-GB",{timeZone: "Europe/London"})}</Text>
     </View>
 )
 
@@ -73,7 +73,6 @@ const ChatScreen = ({ navigation, route }) => {
                     let messages = [...response.messages]
                     messages.forEach(element => {
                         element.date = new Date(element.date)
-                        console.log(element.content)
                     });
                     setMessagesList(messages)
                     setIsMore(response.isMore)
@@ -128,13 +127,15 @@ const ChatScreen = ({ navigation, route }) => {
 
     const [isRefreshing,setIsRefreshing] = useState(false);
     const [page, setPage] = useState(1);
+    const [refreshed, setRefreshed] = useState(false)
 
     return (
         <SafeAreaView style={{ flex: 1 }}>
             {messagesList ? <View style={styles.container}><FlatList
                 ref={flatList}
                 onContentSizeChange={() => {
-                    if (messagesList.length != 0) {
+                    if(refreshed) return
+                    if (messagesList.length != 0 ) {
                         flatList.current.scrollToEnd()
                     }
                 }}
@@ -143,7 +144,9 @@ const ChatScreen = ({ navigation, route }) => {
                         flatList.current.scrollToEnd()
                     }
                 }}
-                data={messagesList}
+                data={messagesList.sort((a, b) =>{ 
+                    return a.date - b.date;
+                })}
                 renderItem={({ item }) => <Item list={messagesList} fun={setMessagesList} socket={socket} chatId={route.params.chatId} _id={item._id} content={item.content} userId={item.userId} date={item.date} route={route} userName={item.userName} />}
                 keyExtractor={item => item._id}
                 onRefresh={async () => {
@@ -157,13 +160,18 @@ const ChatScreen = ({ navigation, route }) => {
                             const messages = [...response.messages]
                             messages.forEach(element => {
                                 element.date = new Date(element.date)
+                                console.log('messages',element.date)
                             });
-                            newList.push(messages)
+                            newList.push(...messages)
                             newList.forEach(element => {
-                                console.log(element._id)
+                                console.log('newList',element.date)
                             });
-                            
+                            setRefreshed(true)
                             setMessagesList(newList)
+                            setTimeout(() => {
+                                setRefreshed(false)
+                            }, 1000);
+                            
                             resolve(setIsMore(response.isMore))
                         }))
                     }
