@@ -73,6 +73,7 @@ const ChatScreen = ({ navigation, route }) => {
                     let messages = [...response.messages]
                     messages.forEach(element => {
                         element.date = new Date(element.date)
+                        console.log(element.content)
                     });
                     setMessagesList(messages)
                     setIsMore(response.isMore)
