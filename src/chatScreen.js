@@ -87,6 +87,7 @@ const ChatScreen = ({ navigation, route }) => {
         const messageListener = async (message) => {
             try {
                 let updated = [...messagesList]
+                console.log('tutaj',message)
                 updated.push({ _id: message._id, userId: message.userId, userName: message.userName, date: new Date(message.date), content: message.content })
                 setMessagesList(updated)
             } catch (e) {
