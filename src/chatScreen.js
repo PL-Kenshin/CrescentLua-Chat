@@ -89,7 +89,7 @@ const ChatScreen = ({ navigation, route }) => {
         const messageListener = async (message) => {
             try {
                 let updated = [...messagesList]
-                updated.push({ id: updated[updated.length-1].id+1, userId: message.userId, userName: message.userName, date: new Date(message.date), content: message.content })
+                updated.push({ id: message.id, userId: message.userId, userName: message.userName, date: new Date(message.date), content: message.content })
                 setMessagesList(updated)
             } catch (e) {
                 console.log('messageListener Error: ',e)
@@ -147,8 +147,8 @@ const ChatScreen = ({ navigation, route }) => {
                     }
                 }}
                 data={messagesList}
-                renderItem={({ item }) => <Item list={messagesList} fun={setMessagesList} socket={socket} chatId={route.params.chatId} id={item.id} content={item.content} userId={item.userId} date={item.date} route={route} userName={item.userName} />}
-                keyExtractor={item => item.id}
+                renderItem={({ item }) => <Item list={messagesList} fun={setMessagesList} socket={socket} chatId={route.params.chatId} id={item._id} content={item.content} userId={item.userId} date={item.date} route={route} userName={item.userName} />}
+                keyExtractor={item => item._id}
                 onRefresh={async () => {
                     setIsRefreshing(true)
                     console.log(isMore)
@@ -163,7 +163,7 @@ const ChatScreen = ({ navigation, route }) => {
                             });
                             newList.push(messages)
                             newList.forEach(element => {
-                                console.log(element.id)
+                                console.log(element._id)
                             });
                             
                             setMessagesList(newList)
@@ -184,12 +184,14 @@ const ChatScreen = ({ navigation, route }) => {
                         content = inputValue
                         textInput.current.clear()
                         setInputValue('')
+                        let id = null
                         try {
                             await new Promise(resolve => socket.emit("message", route.params.chatId, {
                                 userId: route.params.userData.user.id,
                                 userName: route.params.userData.user.name,
                                 content: content
                             }, (response) => {
+                                id = response.id
                                 resolve(date = new Date(response.date))
                             }))
                         } catch (e) {
@@ -197,12 +199,7 @@ const ChatScreen = ({ navigation, route }) => {
                         }
 
                         const test = [...messagesList]
-                        if(test[test.length-1]?.id){
-                            idCount = test[test.length-1].id+1
-                        }else{
-                            idCount = 1
-                        }
-                        test.push({ id: idCount, userId: route.params.userData.user.id, userName: route.params.userData.user.name, date: date, content: inputValue })
+                        test.push({ id: id, userId: route.params.userData.user.id, userName: route.params.userData.user.name, date: date, content: inputValue })
 
                         setMessagesList(test)
 
