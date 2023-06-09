@@ -1,4 +1,4 @@
-import React, { Component, useEffect } from 'react';
+import React, { Component, useEffect, useState, useRef } from 'react';
 import { View, StyleSheet, TouchableOpacity, Text, Image, SafeAreaView, FlatList, TextInput, Alert } from 'react-native';
 import { scale, moderateScale, verticalScale } from './scalingUtils';
 import Icon from 'react-native-vector-icons/FontAwesome';
@@ -35,20 +35,21 @@ const Item = ({ list, fun, socket, chatId, id, content, userId, userName, date, 
                     ]
                     )
                 }
-            }
-            }>
-            <Text style={styles.title}>{content}</Text>
-        </TouchableOpacity>
+            }}
+            > 
+                <Text style={styles.title}>{content}</Text> 
+            </TouchableOpacity>
         <Text style={userId == route.params.userData.user.id ? styles.dateSelf : styles.date}>{date.getHours()}:{date.getMinutes() < 10 ? "0" + date.getMinutes() : date.getMinutes()}</Text>
     </View>
 )
 
 const ChatScreen = ({ navigation, route }) => {
-    const flatList = React.useRef(null)
-    const textInput = React.useRef(null)
-    const [inputValue, setInputValue] = React.useState('')
+    const flatList = useRef(null)
+    const textInput = useRef(null)
+    const [inputValue, setInputValue] = useState('')
+    const [messagesList, setMessagesList] = useState(null)
+    const [isMore, setIsMore] = useState(false)
 
-    const [messagesList, setMessagesList] = React.useState(null)
 
     const socket = route.params.socket
     useEffect(() => {
@@ -76,6 +77,7 @@ const ChatScreen = ({ navigation, route }) => {
                         element.date = new Date(element.date)
                     });
                     setMessagesList(messages)
+                    setIsMore(response.isMore)
                 });
             } catch (e) {
                 console.error('Error fetching data:', e)
@@ -127,6 +129,9 @@ const ChatScreen = ({ navigation, route }) => {
         }
     }, [messagesList])
 
+    const [isRefreshing,setIsRefreshing] = useState(false);
+    const [page, setPage] = useState(1);
+
     return (
         <SafeAreaView style={{ flex: 1 }}>
             {messagesList ? <View style={styles.container}><FlatList
@@ -144,6 +149,30 @@ const ChatScreen = ({ navigation, route }) => {
                 data={messagesList}
                 renderItem={({ item }) => <Item list={messagesList} fun={setMessagesList} socket={socket} chatId={route.params.chatId} id={item.id} content={item.content} userId={item.userId} date={item.date} route={route} userName={item.userName} />}
                 keyExtractor={item => item.id}
+                onRefresh={async () => {
+                    setIsRefreshing(true)
+                    console.log(isMore)
+                    
+                    if(isMore===true ){
+                        await new Promise(resolve => socket.emit('getNextMessages',route.params.chatId,page, (response) =>{
+                            setPage(page+1)
+                            const newList = [...messagesList]
+                            const messages = [...response.messages]
+                            messages.forEach(element => {
+                                element.date = new Date(element.date)
+                            });
+                            newList.push(messages)
+                            newList.forEach(element => {
+                                console.log(element.id)
+                            });
+                            
+                            setMessagesList(newList)
+                            resolve(setIsMore(response.isMore))
+                        }))
+                    }
+                    setIsRefreshing(false)
+                }}
+                refreshing={isRefreshing}
             />
                 <View style={styles.inputArea}>
                     <TextInput style={styles.input} ref={textInput} onChangeText={(value) => setInputValue(value)} />
@@ -168,7 +197,12 @@ const ChatScreen = ({ navigation, route }) => {
                         }
 
                         const test = [...messagesList]
-                        test.push({ id: test[test.length-1].id+1, userId: route.params.userData.user.id, userName: route.params.userData.user.name, date: date, content: inputValue })
+                        if(test[test.length-1]?.id){
+                            idCount = test[test.length-1].id+1
+                        }else{
+                            idCount = 1
+                        }
+                        test.push({ id: idCount, userId: route.params.userData.user.id, userName: route.params.userData.user.name, date: date, content: inputValue })
 
                         setMessagesList(test)
 

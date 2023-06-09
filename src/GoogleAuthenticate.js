@@ -28,21 +28,26 @@ class GoogleAuthenticate extends Component {
     console.log("skipper:" + this.state.isLoginScreenPresented)
     if(this.state.isLoginScreenPresented==false){
       console.log('zalogowany')
-      const userInfo = await GoogleSignin.signInSilently();
-      this.setState({ userInfo });
-      this.setState({ isSigninInProgress: false })
-      this.props.navigation.reset({
-        index:0,
-        routes:[
-          {
-            name: 'ChatroomSelectionScreen',
-            params: {
-              userData: this.state.userInfo,
-              fun: this.signOut
+      try {
+        const userInfo = await GoogleSignin.signInSilently();
+        this.setState({ userInfo });
+        this.setState({ isSigninInProgress: false })
+        this.props.navigation.reset({
+          index:0,
+          routes:[
+            {
+              name: 'ChatroomSelectionScreen',
+              params: {
+                userData: this.state.userInfo,
+                fun: this.signOut
+              }
             }
-          }
-        ]
-      })
+          ]
+        })
+      } catch (error) {
+        console.log(error)
+        this.setState({ isLoginScreenPresented: true })
+      }
     }
   }
 
