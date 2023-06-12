@@ -1,9 +1,11 @@
 import React, { Component, useEffect, useState, useRef } from 'react';
-import { View, StyleSheet, TouchableOpacity, Text, Image, SafeAreaView, FlatList, TextInput, Alert } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, Text, Image, SafeAreaView, FlatList, TextInput, Alert, ToastAndroid } from 'react-native';
 import { scale, moderateScale, verticalScale } from './scalingUtils';
 import Icon from 'react-native-vector-icons/FontAwesome';
+import MaterialIcon from 'react-native-vector-icons/MaterialCommunityIcons'
 import { getTimeZone } from "react-native-localize";
-
+import NetInfo from "@react-native-community/netinfo";
+import AsyncStorage from '@react-native-async-storage/async-storage';
 //import { LogBox } from 'react-native';
 //LogBox.ignoreLogs([ 'Non-serializable values were found in the navigation state', ]);
 //odkomentować w przypadku braku rozwiązania na warning
@@ -36,7 +38,7 @@ const Item = ({ list, fun, socket, chatId, _id, content, userId, userName, date,
             }}
             > 
                 <Text style={styles.title}>{content}</Text> 
-            </TouchableOpacity>{console.log(getTimeZone())}
+            </TouchableOpacity>
         <Text style={userId == route.params.userData.user.id ? styles.dateSelf : styles.date}>{date.toLocaleString("en-GB",{timeZone: getTimeZone()})}</Text>
     </View>
 )
@@ -47,6 +49,7 @@ const ChatScreen = ({ navigation, route }) => {
     const [inputValue, setInputValue] = useState('')
     const [messagesList, setMessagesList] = useState(null)
     const [isMore, setIsMore] = useState(false)
+    const [isOffline, setOfflineStatus] = useState(false);
 
 
     const socket = route.params.socket
@@ -60,6 +63,13 @@ const ChatScreen = ({ navigation, route }) => {
                     <Icon name="angle-left" size={30} color="white" />
                 </TouchableOpacity>
             ),
+            headerRight: () => (
+                <TouchableOpacity onPress={() => {
+                    ToastAndroid.show(!isOffline?"Connected":"Disconnected",3000)
+                }} hitSlop={{ top: 10, bottom: 10, right: 10, left: 10 }}>
+                    <MaterialIcon name={!isOffline?"signal":"signal-off"} size={30} color="white"></MaterialIcon>
+                </TouchableOpacity>
+            ),
             headerBackVisible: false,
             headerStyle: {
                 backgroundColor: '#444444',
@@ -67,29 +77,65 @@ const ChatScreen = ({ navigation, route }) => {
             headerTintColor: 'white',
             headerTitleAlign: 'center'
         })
+
+        const unsubscribe = NetInfo.addEventListener(async state => {
+
+            if(!state.isConnected){
+                setOfflineStatus(true)
+                try {
+                    let jsonValue = await AsyncStorage.getItem('messages')
+                    jsonValue = jsonValue != null ? JSON.parse(jsonValue) : null;
+                    if(jsonValue !== null) {
+                      setMessagesList(jsonValue)
+                    }
+                  } catch(e) {
+                    console.error(e)
+                  }
+                
+            } else{
+                setOfflineStatus(false)
+
+            }
+        });
+
         const fetchMessages = async () => {
             try {
-                socket.emit("getMessages", route.params.chatId, (response) => {
+                socket.emit("getMessages", route.params.chatId, async (response) => {
                     let messages = [...response.messages]
                     messages.forEach(element => {
                         element.date = new Date(element.date)
                     });
                     setMessagesList(messages)
                     setIsMore(response.isMore)
+                    try {
+                        const jsonValue = JSON.stringify(messages)
+                        await AsyncStorage.setItem('messages', jsonValue)
+                    } catch (e) {
+                        console.error('saving data error')
+                    }
                 });
             } catch (e) {
                 console.error('Error fetching data:', e)
             }
         }
         fetchMessages()
+
+        return () => {
+            unsubscribe()
+        }
     }, [])
     useEffect(() => {
         const messageListener = async (message) => {
             try {
                 let updated = [...messagesList]
-                console.log('tutaj',message)
                 updated.push({ _id: message._id, userId: message.userId, userName: message.userName, date: new Date(message.date), content: message.content })
                 setMessagesList(updated)
+                try {
+                    const jsonValue = JSON.stringify(updated)
+                    await AsyncStorage.setItem('messages', jsonValue)
+                } catch (e) {
+                    console.error('saving data error')
+                }
             } catch (e) {
                 console.log('messageListener Error: ',e)
             }
@@ -104,9 +150,14 @@ const ChatScreen = ({ navigation, route }) => {
         const deleteListener = async (_id) =>{
             let items = [...messagesList]
             let index = items.findIndex((element) => element._id == _id)
-            console.log(index)
             items.splice(index, 1)
             setMessagesList(items)
+            try {
+                const jsonValue = JSON.stringify(items)
+                await AsyncStorage.setItem('messages', jsonValue)
+            } catch (e) {
+                console.error('saving data error')
+            }
         }
         try {
             socket.on("deleteMessage", deleteListener)
@@ -207,6 +258,12 @@ const ChatScreen = ({ navigation, route }) => {
                         test.push({ _id: _id, userId: route.params.userData.user.id, userName: route.params.userData.user.name, date: date, content: inputValue })
 
                         setMessagesList(test)
+                        try {
+                            const jsonValue = JSON.stringify(test)
+                            await AsyncStorage.setItem('messages', jsonValue)
+                        } catch (e) {
+                            console.error('saving data error')
+                        }
 
                     }}>
 

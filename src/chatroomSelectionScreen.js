@@ -39,7 +39,7 @@ const Item = ({ navigation, title, chatId, userInfo }) => (
 
 const ChatRoomSelectionScreen = ({ navigation, route }) => {
     useEffect(() => {
-        console.log(route.params.userData)
+        //console.log(route.params.userData)
         navigation.setOptions({
             headerTitle: '',
             headerRight: () => (
