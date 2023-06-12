@@ -54,29 +54,6 @@ const ChatScreen = ({ navigation, route }) => {
 
     const socket = route.params.socket
     useEffect(() => {
-        navigation.setOptions({
-            headerTitle: route.params.title,
-            headerLeft: () => (
-                <TouchableOpacity onPress={() => {
-                    navigation.goBack()
-                }} hitSlop={{ top: 10, bottom: 10, right: 10, left: 10 }}>
-                    <Icon name="angle-left" size={30} color="white" />
-                </TouchableOpacity>
-            ),
-            headerRight: () => (
-                <TouchableOpacity onPress={() => {
-                    ToastAndroid.show(!isOffline?"Connected":"Disconnected",3000)
-                }} hitSlop={{ top: 10, bottom: 10, right: 10, left: 10 }}>
-                    <MaterialIcon name={!isOffline?"signal":"signal-off"} size={30} color="white"></MaterialIcon>
-                </TouchableOpacity>
-            ),
-            headerBackVisible: false,
-            headerStyle: {
-                backgroundColor: '#444444',
-            },
-            headerTintColor: 'white',
-            headerTitleAlign: 'center'
-        })
 
         const unsubscribe = NetInfo.addEventListener(async state => {
 
@@ -176,6 +153,32 @@ const ChatScreen = ({ navigation, route }) => {
         }
     }, [messagesList])
 
+    useEffect(() => {
+        navigation.setOptions({
+            headerTitle: route.params.title,
+            headerLeft: () => (
+                <TouchableOpacity onPress={() => {
+                    navigation.goBack()
+                }} hitSlop={{ top: 10, bottom: 10, right: 10, left: 10 }}>
+                    <Icon name="angle-left" size={30} color="white" />
+                </TouchableOpacity>
+            ),
+            headerRight: () => (
+                <TouchableOpacity onPress={() => {
+                    ToastAndroid.show(!isOffline?"Connected":"Disconnected",3000)
+                }} hitSlop={{ top: 10, bottom: 10, right: 10, left: 10 }}>
+                    <MaterialIcon name={!isOffline?"signal":"signal-off"} size={30} color="white"></MaterialIcon>
+                </TouchableOpacity>
+            ),
+            headerBackVisible: false,
+            headerStyle: {
+                backgroundColor: '#444444',
+            },
+            headerTintColor: 'white',
+            headerTitleAlign: 'center'
+        })
+    },[isOffline])
+
     const [isRefreshing,setIsRefreshing] = useState(false);
     const [page, setPage] = useState(1);
     const [refreshed, setRefreshed] = useState(false)
@@ -269,7 +272,7 @@ const ChatScreen = ({ navigation, route }) => {
 
                         <Icon name="chevron-circle-right" size={40} color="#777777" />
                     </TouchableOpacity>
-                </View></View> : <View><Text>Loading...</Text></View>}
+                </View></View> : <View style={styles.container}><Text>Loading...</Text></View>}
 
         </SafeAreaView>
     )
