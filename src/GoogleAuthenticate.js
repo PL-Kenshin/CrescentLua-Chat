@@ -25,9 +25,9 @@ class GoogleAuthenticate extends Component {
 
   async componentDidMount() {
     await this.isSignedIn()
-    console.log("skipper:" + this.state.isLoginScreenPresented)
+    //console.log("skipper:" + this.state.isLoginScreenPresented)
     if(this.state.isLoginScreenPresented==false){
-      console.log('zalogowany')
+      //console.log('zalogowany')
       try {
         const userInfo = await GoogleSignin.signInSilently();
         this.setState({ userInfo });
@@ -82,7 +82,7 @@ class GoogleAuthenticate extends Component {
     try {
       await GoogleSignin.hasPlayServices();
       const userInfo = await GoogleSignin.signIn();
-      console.log(userInfo)
+      //console.log(userInfo)
       this.setState({ userInfo:userInfo });
       this.setState({ isSigninInProgress: false })
       this.props.navigation.reset({
@@ -143,7 +143,7 @@ class GoogleAuthenticate extends Component {
   };
 
   render() {
-    console.log("render:" + this.state.isLoginScreenPresented)
+    //console.log("render:" + this.state.isLoginScreenPresented)
     return (
       <View style={styles.container}>
       {this.state.isLoginScreenPresented? <View style={{ display: 'flex', flex: 1, backgroundColor: '#121212', alignItems: 'center' }}>

@@ -2,11 +2,11 @@ import React, { Component, useEffect, useState, useRef } from 'react';
 import { View, StyleSheet, TouchableOpacity, Text, Image, SafeAreaView, FlatList, TextInput, Alert } from 'react-native';
 import { scale, moderateScale, verticalScale } from './scalingUtils';
 import Icon from 'react-native-vector-icons/FontAwesome';
+import { getTimeZone } from "react-native-localize";
 
 //import { LogBox } from 'react-native';
 //LogBox.ignoreLogs([ 'Non-serializable values were found in the navigation state', ]);
 //odkomentować w przypadku braku rozwiązania na warning
-
 
 
 const Item = ({ list, fun, socket, chatId, _id, content, userId, userName, date, route }) => (
@@ -36,8 +36,8 @@ const Item = ({ list, fun, socket, chatId, _id, content, userId, userName, date,
             }}
             > 
                 <Text style={styles.title}>{content}</Text> 
-            </TouchableOpacity>
-        <Text style={userId == route.params.userData.user.id ? styles.dateSelf : styles.date}>{date.toLocaleString("en-GB",{timeZone: "Europe/London"})}</Text>
+            </TouchableOpacity>{console.log(getTimeZone())}
+        <Text style={userId == route.params.userData.user.id ? styles.dateSelf : styles.date}>{date.toLocaleString("en-GB",{timeZone: getTimeZone()})}</Text>
     </View>
 )
 
