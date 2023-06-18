@@ -11,7 +11,7 @@ import ChatScreen from './src/chatScreen'
 
 const Stack = createNativeStackNavigator();
 
-const socket = socketIO.connect("http://89.234.222.123:4000")
+const socket = socketIO.connect("secret")
 const App = () => {
 
   useEffect(() => {
